@@ -1,0 +1,12 @@
+{
+  "projectName": "MiniScript",
+  "languages": [{
+    "id": "miniscript",
+    "grammar": "src/language/miniscript.langium",
+    "fileExtensions": [".ms"],
+    "textMate": {
+      "out": "syntaxes/miniscript.tmLanguage.json"
+    }
+  }],
+  "out": "src/language/generated"
+}

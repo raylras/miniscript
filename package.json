@@ -1,0 +1,66 @@
+{
+  "name": "miniscript",
+  "displayName": "miniscript",
+  "type": "module",
+  "version": "0.0.1",
+  "packageManager": "pnpm@10.13.1",
+  "description": "miniscript",
+  "repository": "unknown",
+  "categories": [
+    "Programming Languages"
+  ],
+  "main": "./out/extension/main.cjs",
+  "files": [
+    "LICENSE",
+    "out/**/*.cjs"
+  ],
+  "engines": {
+    "vscode": "^1.102.0"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "miniscript",
+        "aliases": [
+          "MiniScript"
+        ],
+        "extensions": [
+          ".ms"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "miniscript",
+        "scopeName": "source.miniscript",
+        "path": "syntaxes/miniscript.tmLanguage.json"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.mjs",
+    "watch": "concurrently -n langium,esbuild -c blue,yellow \"pnpm langium:generate --watch\" \"pnpm build --watch\"",
+    "lint": "eslint src --ext ts",
+    "langium:generate": "langium generate",
+    "vscode:prepublish": "pnpm lint && pnpm build --production",
+    "package": "vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "langium": "^3.5.0",
+    "vscode-languageclient": "^9.0.1",
+    "vscode-languageserver": "^9.0.1"
+  },
+  "devDependencies": {
+    "@antfu/eslint-config": "^4.17.0",
+    "@types/node": "^24.0.15",
+    "@types/vscode": "^1.102.0",
+    "@typescript-eslint/eslint-plugin": "^8.37.0",
+    "@typescript-eslint/parser": "^8.37.0",
+    "concurrently": "^9.2.0",
+    "esbuild": "^0.25.7",
+    "eslint": "^9.31.0",
+    "langium-cli": "^3.5.2",
+    "typescript": "^5.8.3"
+  }
+}
