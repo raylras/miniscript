@@ -4,13 +4,16 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  langium: ^3.5.0
+
 importers:
 
   .:
     dependencies:
       langium:
-        specifier: 3.4.0
-        version: 3.4.0
+        specifier: ^3.5.0
+        version: 3.5.0
       typir:
         specifier: ^0.2.1
         version: 0.2.1
@@ -1118,10 +1121,6 @@ packages:
 
   langium-railroad@3.5.0:
     resolution: {integrity: sha512-80Enc6bOR6oHZD18IQlVTdfCh07rbrM5SOsPUPc1kyh7n3zQbmLs5P2E9hV4SoWlkhOjGKL1I9Z6uORpgy+jTQ==}
-
-  langium@3.4.0:
-    resolution: {integrity: sha512-7xufsaF5jYGFMXHOTka8bN48b9FHn2vZGL2R+PGgyi+JY/xgimUFDKYcz/h4gm5m8p3sSRtZDh+sK2U63K0MNg==}
-    engines: {node: '>=18.0.0'}
 
   langium@3.5.0:
     resolution: {integrity: sha512-tnqVzWOkUcoiY0bWlyE8diFrZjmGBCF7MesC1bjUaZM+YGQSfdPC+KkhmHM0DWFG+uLcPxidKaPP1SYGtg3J0Q==}
@@ -2769,14 +2768,6 @@ snapshots:
       langium: 3.5.0
       railroad-diagrams: 1.0.0
 
-  langium@3.4.0:
-    dependencies:
-      chevrotain: 11.0.3
-      chevrotain-allstar: 0.3.1(chevrotain@11.0.3)
-      vscode-languageserver: 9.0.1
-      vscode-languageserver-textdocument: 1.0.12
-      vscode-uri: 3.0.8
-
   langium@3.5.0:
     dependencies:
       chevrotain: 11.0.3
@@ -3375,7 +3366,7 @@ snapshots:
 
   typir-langium@0.2.1:
     dependencies:
-      langium: 3.4.0
+      langium: 3.5.0
       typir: 0.2.1
 
   typir@0.2.1: {}
