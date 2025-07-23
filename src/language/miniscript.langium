@@ -4,25 +4,26 @@ interface Named {
     name: string
 }
 
-interface ClassDecl extends Named {
-    superClass: @ClassDecl
+interface ClassDeclaration extends Named {
+    superClass: @ClassDeclaration
     typeParams: TypeParameter[]
     body: BlockStatement
 }
 
-interface FunctionDecl extends Named {
+interface FunctionDeclaration extends Named {
     params: ValueParameter[]
-    returnTypeRef: TypeReference
+    returnTypeRef?: TypeReference
     body: BlockStatement
 }
 
-interface VariableDecl extends Named {
-    typeRef: TypeReference
-    initializer: Expression
+interface VariableDeclaration extends Named {
+    typeRef?: TypeReference
+    initializer?: Expression
 }
 
 interface ValueParameter extends Named {
-    typeRef: TypeReference
+    typeRef?: TypeReference
+    defaultValue?: Expression
 }
 
 interface TypeParameter extends Named {}
@@ -30,14 +31,14 @@ interface TypeParameter extends Named {}
 interface TypeReference {}
 
 entry MiniScript:
-    ( classes+=ClassDecl 
-    | functions+=FunctionDecl
+    ( classes+=ClassDeclaration 
+    | functions+=FunctionDeclaration
     | statements+=Statement
     )*
 ;
 
-ClassDecl returns ClassDecl:
-    'class' name=ID (':' superClass=[ClassDecl:ID])? ('<' typeParams+=TypeParameter (',' typeParams+=TypeParameter)* '>')? 
+ClassDeclaration returns ClassDeclaration:
+    'class' name=ID (':' superClass=[ClassDeclaration:ID])? ('<' typeParams+=TypeParameter (',' typeParams+=TypeParameter)* '>')? 
     body=BlockStatement?
 ;
 
@@ -45,21 +46,21 @@ TypeParameter returns TypeParameter:
     name=ID
 ;
 
-FunctionDecl returns FunctionDecl:
+FunctionDeclaration returns FunctionDeclaration:
     'fun' name=ID '(' (params+=ValueParameter (',' params+=ValueParameter)*)? ')' ('->' returnTypeRef=TypeReference )?
     body=BlockStatement
 ;
 
 ValueParameter returns ValueParameter:
-    name=ID (':' typeRef=TypeReference)?
+    name=ID (':' typeRef=TypeReference)? ('=' defaultValue=Expression)?
 ;
 
-VariableDecl returns VariableDecl:
+VariableDeclaration returns VariableDeclaration:
     'let' name=ID (':' typeRef=TypeReference)? ('=' initializer=Expression)?
 ;
 
 Statement:
-    VariableDecl | ReturnStatement | BlockStatement | ExpressionStatement
+    VariableDeclaration | ReturnStatement | BlockStatement | ExpressionStatement
 ;
 
 BlockStatement:
@@ -124,7 +125,7 @@ PrefixExpression:
 
 PostfixExpression:
     PrimaryExpression (
-        ({infer MemberAccess.receiver=current} '.' target=[Named:ID] ) |
+        ({infer MemberAccess.receiver=current} '.' target=[Named:ID]) |
         ({infer InfixExpression.left=current} op=('..') right=Expression) |
         ({infer TypeCastExpression.expr=current} 'as' typeRef=TypeReference) |
         ({infer IndexingExpression.receiver=current} '[' argument=Expression ']') |
@@ -133,7 +134,7 @@ PostfixExpression:
     )*
 ;
 
-fragment PrimaryExpression:
+PrimaryExpression:
     ParenthesizedExpression | FunctionExpression | ReferenceExpression | LiteralExpression
 ;
 
