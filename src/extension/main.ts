@@ -41,7 +41,7 @@ function startLanguageClient(context: vscode.ExtensionContext): LanguageClient {
   // Create the language client and start the client.
   const client = new LanguageClient(
     'miniscript',
-    'miniscript',
+    'MiniScript',
     serverOptions,
     clientOptions,
   )

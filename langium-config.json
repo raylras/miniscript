@@ -3,7 +3,7 @@
   "languages": [{
     "id": "miniscript",
     "grammar": "src/language/miniscript.langium",
-    "fileExtensions": [".ms"],
+    "fileExtensions": [".mini"],
     "textMate": {
       "out": "syntaxes/miniscript.tmLanguage.json"
     }

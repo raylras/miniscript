@@ -25,7 +25,7 @@
           "MiniScript"
         ],
         "extensions": [
-          ".ms"
+          ".mini"
         ],
         "configuration": "./language-configuration.json"
       }
