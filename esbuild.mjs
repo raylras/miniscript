@@ -1,4 +1,5 @@
 import process from 'node:process'
+import chalk from 'chalk'
 import * as esbuild from 'esbuild'
 
 const watch = process.argv.includes('--watch')
@@ -13,13 +14,16 @@ async function main() {
         startTime = performance.now()
       })
       build.onEnd((result) => {
-        result.errors.forEach(({ text, location }) => {
-          console.error(`✘ [ERROR] ${text}`)
-          console.error(`    ${location.file}:${location.line}:${location.column}:`)
-        })
-        const endTime = performance.now()
-        const duration = (endTime - startTime).toFixed(0)
-        console.log(`Build finished in ${duration}ms`)
+        const elapsedTime = (performance.now() - startTime).toFixed(0)
+
+        const date = new Date()
+        const hours = date.getHours().toString().padStart(2, '0')
+        const minutes = date.getMinutes().toString().padStart(2, '0')
+        const seconds = date.getSeconds().toString().padStart(2, '0')
+        const dateTime = `${hours}:${minutes}:${seconds}`
+
+        const errors = result.errors.length
+        console.log(`[${chalk.gray(dateTime)}] Built ${errors ? chalk.red('failed') : chalk.green('successfully')} in ${elapsedTime}ms`)
       })
     },
   }
