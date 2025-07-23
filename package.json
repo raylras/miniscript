@@ -41,7 +41,7 @@
   "scripts": {
     "build": "node esbuild.mjs",
     "watch": "concurrently -n langium,esbuild -c blue,yellow \"pnpm langium:generate --watch\" \"pnpm build --watch\"",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint .",
     "langium:generate": "langium generate",
     "vscode:prepublish": "pnpm lint && pnpm build --production",
     "package": "vsce package --no-dependencies"
