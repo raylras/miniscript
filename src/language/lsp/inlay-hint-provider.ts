@@ -2,12 +2,12 @@ import type { AstNode, LangiumDocument } from 'langium'
 import type { InlayHintAcceptor } from 'langium/lsp'
 import type { TypirLangiumServices } from 'typir-langium'
 import type { CancellationToken, InlayHint, InlayHintParams } from 'vscode-languageclient'
-import type { MiniScriptAstType } from '../generated/ast.js'
-import type { MiniScriptServices } from '../module.js'
+import type { MiniScriptAstType } from '../generated/ast'
+import type { MiniScriptServices } from '../module'
 import { GrammarUtils } from 'langium'
 import { AbstractInlayHintProvider } from 'langium/lsp'
 import { isType } from 'typir'
-import { defineRules } from '../util.js'
+import { defineRules } from '../util'
 
 type SourceMap = MiniScriptAstType
 type RuleMap = { [K in keyof SourceMap]?: (node: SourceMap[K], acceptor: InlayHintAcceptor, typir: TypirLangiumServices<MiniScriptAstType>) => void }

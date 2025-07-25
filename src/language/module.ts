@@ -1,15 +1,15 @@
 import type { LangiumSharedCoreServices, Module } from 'langium'
 import type { DefaultSharedModuleContext, LangiumServices, LangiumSharedServices, PartialLangiumServices } from 'langium/lsp'
 import type { TypirLangiumServices } from 'typir-langium'
-import type { MiniScriptAstType } from './generated/ast.js'
+import type { MiniScriptAstType } from './generated/ast'
 import { inject } from 'langium'
 import { createDefaultModule, createDefaultSharedModule } from 'langium/lsp'
 import { createTypirLangiumServices, initializeLangiumTypirServices } from 'typir-langium'
-import { reflection } from './generated/ast.js'
-import { MiniScriptGeneratedModule, MiniScriptGeneratedSharedModule } from './generated/module.js'
-import { MiniScriptInlayHintProvider } from './lsp/inlay-hint-provider.js'
-import { MiniScriptTypeSystem } from './typer.js'
-import { MiniScriptValidator } from './validator.js'
+import { reflection } from './generated/ast'
+import { MiniScriptGeneratedModule, MiniScriptGeneratedSharedModule } from './generated/module'
+import { MiniScriptInlayHintProvider } from './lsp/inlay-hint-provider'
+import { MiniScriptTypeSystem } from './typer'
+import { MiniScriptValidator } from './validator'
 
 /**
  * Declaration of custom services - add your own service classes here.

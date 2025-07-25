@@ -12,7 +12,8 @@
   "main": "./out/extension/main.cjs",
   "files": [
     "LICENSE",
-    "out/**/*.cjs"
+    "out/**/*.cjs",
+    "syntaxes/**/*.json"
   ],
   "engines": {
     "vscode": "^1.102.0"
@@ -39,11 +40,10 @@
     ]
   },
   "scripts": {
-    "build": "node esbuild.mjs",
-    "watch": "concurrently -n langium,esbuild -c blue,yellow \"pnpm langium:generate --watch\" \"pnpm build --watch\"",
-    "lint": "eslint .",
-    "langium:generate": "langium generate",
-    "vscode:prepublish": "pnpm lint && pnpm build --production",
+    "watch": "concurrently -n langium,tsup -c blue,yellow \"langium generate --mode=development --watch\" \"tsup --watch --sourcemap\"",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "vscode:prepublish": "eslint && langium generate --mode=production && tsup --minify",
     "package": "vsce package --no-dependencies"
   },
   "dependencies": {
@@ -54,17 +54,16 @@
     "vscode-languageserver": "^9.0.1"
   },
   "devDependencies": {
-    "@antfu/eslint-config": "^4.18.0",
+    "@antfu/eslint-config": "^5.0.0",
     "@types/node": "^24.1.0",
     "@types/vscode": "^1.102.0",
     "@typescript-eslint/eslint-plugin": "^8.38.0",
     "@typescript-eslint/parser": "^8.38.0",
     "@vscode/vsce": "^3.6.0",
-    "chalk": "^5.4.1",
     "concurrently": "^9.2.0",
-    "esbuild": "^0.25.8",
     "eslint": "^9.31.0",
     "langium-cli": "^3.5.2",
+    "tsup": "^8.5.0",
     "typescript": "^5.8.3"
   },
   "pnpm": {

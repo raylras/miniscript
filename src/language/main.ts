@@ -1,7 +1,7 @@
 import { startLanguageServer } from 'langium/lsp'
 import { NodeFileSystem } from 'langium/node'
-import { createConnection, ProposedFeatures } from 'vscode-languageserver/node.js'
-import { createMiniScriptServices } from './module.js'
+import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
+import { createMiniScriptServices } from './module'
 
 // Create a connection to the client
 const connection = createConnection(ProposedFeatures.all)

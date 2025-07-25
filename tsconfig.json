@@ -1,13 +1,10 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ESNext",
     "lib": ["ESNext"],
-    "rootDir": "src",
     "module": "Preserve",
     "moduleResolution": "Bundler",
     "strict": true,
-    "outDir": "out",
-    "esModuleInterop": true,
     "skipLibCheck": true
   },
   "exclude": [
