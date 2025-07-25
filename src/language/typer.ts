@@ -3,7 +3,7 @@ import type { CreateParameterDetails, FunctionType, InferOperatorWithMultipleOpe
 import type { LangiumTypeSystemDefinition, TypirLangiumServices } from 'typir-langium'
 import type { FunctionDeclaration, MiniScriptAstType } from './generated/ast'
 import { assertUnreachable, InferenceRuleNotApplicable, NO_PARAMETER_NAME } from 'typir'
-import { CallExpression, InfixExpression, isBooleanLiteral, isFunctionDeclaration, isIntegerLiteral, isNamedType, isReferenceExpression, isReturnStatement, isStringLiteral, PrefixExpression } from './generated/ast'
+import { InfixExpression, isBooleanLiteral, isFunctionDeclaration, isIntegerLiteral, isReferenceType, isReturnStatement, isStringLiteral, isValueParameter, isVariableDeclaration, MemberCall, PrefixExpression } from './generated/ast'
 
 export class MiniScriptTypeSystem implements LangiumTypeSystemDefinition<MiniScriptAstType> {
   onInitialize(typir: TypirLangiumServices<MiniScriptAstType>): void {
@@ -11,17 +11,17 @@ export class MiniScriptTypeSystem implements LangiumTypeSystemDefinition<MiniScr
     // typeBool, typeInt and typeString are specific types for MiniScript, ...
     const typeBool = typir.factory.Primitives.create({ primitiveName: 'Bool' })
       .inferenceRule({ filter: isBooleanLiteral })
-      .inferenceRule({ filter: isNamedType, matching: node => node.ref.$refText === 'Bool' })
+      .inferenceRule({ filter: isReferenceType, matching: node => node.value.$refText === 'Bool' })
       .finish()
 
     const typeInt = typir.factory.Primitives.create({ primitiveName: 'Int' })
       .inferenceRule({ filter: isIntegerLiteral })
-      .inferenceRule({ filter: isNamedType, matching: node => node.ref.$refText === 'Int' })
+      .inferenceRule({ filter: isReferenceType, matching: node => node.value.$refText === 'Int' })
       .finish()
 
     const _typeString = typir.factory.Primitives.create({ primitiveName: 'String' })
       .inferenceRule({ filter: isStringLiteral })
-      .inferenceRule({ filter: isNamedType, matching: node => node.ref.$refText === 'String' })
+      .inferenceRule({ filter: isReferenceType, matching: node => node.value.$refText === 'String' })
       .finish()
 
     const typeAny = typir.factory.Top.create({}).finish()
@@ -92,16 +92,10 @@ export class MiniScriptTypeSystem implements LangiumTypeSystemDefinition<MiniScr
     // additional inference rules for ...
     typir.Inference.addInferenceRulesForAstNodes({
       // ... member calls
-      CallExpression: (languageNode) => {
-        if (isReferenceExpression(languageNode.receiver)) {
-          const ref = languageNode.receiver.ref.ref
-          if (isFunctionDeclaration(ref)) {
-            const _type = typir.Inference.inferType(ref)
-            return ref
-          }
-          else {
-            return InferenceRuleNotApplicable
-          }
+      MemberCall: (languageNode) => {
+        const ref = languageNode.element?.ref
+        if (isVariableDeclaration(ref) || isValueParameter(ref)) {
+          return ref
         }
         else {
           return InferenceRuleNotApplicable
@@ -109,8 +103,8 @@ export class MiniScriptTypeSystem implements LangiumTypeSystemDefinition<MiniScr
       },
       // ... variable declarations
       VariableDeclaration: (languageNode) => {
-        if (languageNode.typeRef) {
-          return languageNode.typeRef // the user declared this variable with a type
+        if (languageNode.type) {
+          return languageNode.type // the user declared this variable with a type
         }
         else if (languageNode.initializer) {
           return languageNode.initializer // the user didn't declare a type for this variable => do type inference of the assigned value instead!
@@ -121,8 +115,8 @@ export class MiniScriptTypeSystem implements LangiumTypeSystemDefinition<MiniScr
       },
       // ... parameters
       ValueParameter: (languageNode) => {
-        if (languageNode.typeRef) {
-          return languageNode.typeRef
+        if (languageNode.type) {
+          return languageNode.type
         }
         else if (languageNode.defaultValue) {
           return languageNode.defaultValue
@@ -132,13 +126,16 @@ export class MiniScriptTypeSystem implements LangiumTypeSystemDefinition<MiniScr
         }
       },
       ReferenceExpression: (languageNode) => {
-        return languageNode.ref.ref ?? InferenceRuleNotApplicable
+        return languageNode.value.ref ?? InferenceRuleNotApplicable
       },
       ReturnStatement: (languageNode) => {
         return languageNode.expr ?? InferenceRuleNotApplicable
       },
       BlockStatement: (languageNode) => {
         return languageNode.statements.find(isReturnStatement) ?? InferenceRuleNotApplicable
+      },
+      ConditionalExpression: (languageNode) => {
+        return languageNode.then
       },
     })
   }
@@ -156,11 +153,11 @@ export class MiniScriptTypeSystem implements LangiumTypeSystemDefinition<MiniScr
     const config = typir.factory.Functions
       .create({
         functionName: node.name,
-        outputParameter: { name: NO_PARAMETER_NAME, type: node.returnTypeRef ?? node.body },
-        inputParameters: node.params.map(p => ({ name: p.name, type: p.typeRef ?? p.defaultValue ?? p } satisfies CreateParameterDetails<AstNode>)),
+        outputParameter: { name: NO_PARAMETER_NAME, type: node.returnType ?? node.body },
+        inputParameters: node.params.map(p => ({ name: p.name, type: p.type ?? p.defaultValue ?? p } satisfies CreateParameterDetails<AstNode>)),
         associatedLanguageNode: node,
       })
-    // inference rule for function declaration:
+      // inference rule for function declaration:
       .inferenceRuleForDeclaration({
         languageKey: node.$type,
         matching: (languageNode: FunctionDeclaration) => languageNode === node, // only the current function/method declaration matches!
@@ -173,9 +170,9 @@ export class MiniScriptTypeSystem implements LangiumTypeSystemDefinition<MiniScr
      */
     if (isFunctionDeclaration(node)) {
       config.inferenceRuleForCalls({
-        languageKey: CallExpression,
-        matching: (languageNode: CallExpression) => isReferenceExpression(languageNode.receiver),
-        inputArguments: (languageNode: CallExpression) => languageNode.arguments,
+        languageKey: MemberCall,
+        matching: languageNode => isFunctionDeclaration(languageNode.element?.ref) && languageNode.explicitOperationCall,
+        inputArguments: (languageNode: MemberCall) => languageNode.args,
         validateArgumentsOfFunctionCalls: true,
       })
     }

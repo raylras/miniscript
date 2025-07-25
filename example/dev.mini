@@ -2,15 +2,19 @@ class Animal
 class Dog: Animal
 class Int
 
-// fun fib(n: Int) {
-//     return (n < 1) ? 0 : (n == 1) ? 1 : fib(n - 1) + fib(n - 2)
+fun fib(n: Int) {
+    return (n < 1) ? 0 : (n == 1) ? 1 : fib(n - 1) + fib(n - 2)
+}
+let ret_fib = fib(1)
+
+let f = fib
+// let ret_f = f(1)
+
+// fun add(a: Int, b: Int) {
+//     return a + b
 // }
 
-// let ret_fib = fib(2)
+// let f = add
+// let ret_add = add(1,2)
 
-fun add(a, b) {
-    return a + b
-}
-
-let f = add
-let ret_add = add(1,2)
+let abb = true ? true : false ? true : false

@@ -30,7 +30,29 @@ export class MiniScriptInlayHintProvider extends AbstractInlayHintProvider {
 
   rules = defineRules<RuleMap>({
     VariableDeclaration(node, acceptor, typir) {
-      if (node.typeRef)
+      if (node.type)
+        return
+
+      const nameCst = GrammarUtils.findNodeForProperty(node.$cstNode, 'name')
+      if (!nameCst)
+        return
+
+      const type = typir.Inference.inferType(node)
+      if (!isType(type))
+        return
+
+      acceptor({
+        position: {
+          line: nameCst.range.end.line,
+          character: nameCst.range.end.character,
+        },
+        label: `: ${type.getUserRepresentation()}`,
+        paddingLeft: true,
+      })
+    },
+
+    ValueParameter(node, acceptor, typir) {
+      if (node.type)
         return
 
       const nameCst = GrammarUtils.findNodeForProperty(node.$cstNode, 'name')

@@ -1,34 +1,6 @@
 grammar MiniScript
 
-interface Named {
-    name: string
-}
-
-interface ClassDeclaration extends Named {
-    superClass: @ClassDeclaration
-    typeParams: TypeParameter[]
-    body: BlockStatement
-}
-
-interface FunctionDeclaration extends Named {
-    params: ValueParameter[]
-    returnTypeRef?: TypeReference
-    body: BlockStatement
-}
-
-interface VariableDeclaration extends Named {
-    typeRef?: TypeReference
-    initializer?: Expression
-}
-
-interface ValueParameter extends Named {
-    typeRef?: TypeReference
-    defaultValue?: Expression
-}
-
-interface TypeParameter extends Named {}
-
-interface TypeReference {}
+type NamedElement = ClassDeclaration | FunctionDeclaration | VariableDeclaration | ValueParameter | LambdaParameter | TypeParameter
 
 entry MiniScript:
     ( classes+=ClassDeclaration 
@@ -37,26 +9,35 @@ entry MiniScript:
     )*
 ;
 
-ClassDeclaration returns ClassDeclaration:
+ClassDeclaration:
     'class' name=ID (':' superClass=[ClassDeclaration:ID])? ('<' typeParams+=TypeParameter (',' typeParams+=TypeParameter)* '>')? 
     body=BlockStatement?
 ;
 
-TypeParameter returns TypeParameter:
+TypeParameter:
     name=ID
 ;
 
-FunctionDeclaration returns FunctionDeclaration:
-    'fun' name=ID '(' (params+=ValueParameter (',' params+=ValueParameter)*)? ')' ('->' returnTypeRef=TypeReference )?
+FunctionDeclaration:
+    'fun' name=ID 
+    (
+        '<' typeParams+=TypeParameter (',' typeParams+=TypeParameter)* '>'
+    )?
+    (
+        '(' (params+=ValueParameter (',' params+=ValueParameter)*)? ')' 
+    )
+    (
+        '->' returnType=Type
+    )?
     body=BlockStatement
 ;
 
-ValueParameter returns ValueParameter:
-    name=ID (':' typeRef=TypeReference)? ('=' defaultValue=Expression)?
+ValueParameter:
+    name=ID (':' type=Type)? ('=' defaultValue=Expression)?
 ;
 
-VariableDeclaration returns VariableDeclaration:
-    'let' name=ID (':' typeRef=TypeReference)? ('=' initializer=Expression)?
+VariableDeclaration:
+    'let' name=ID (':' type=Type)? ('=' initializer=Expression)?
 ;
 
 Statement:
@@ -79,32 +60,20 @@ Expression:
     Assignment
 ;
 
-Assignment:
-    ConditionalExpression ({infer Assignment.left=current} op=('='|'+='|'-='|'~='|'*='|'/='|'%='|'|='|'&='|'^=') right=Assignment)?
+Assignment infers Expression:
+    ConditionalExpression ({infer Assignment.left=current} op=('='|'+='|'-='|'*='|'/='|'%='|'|='|'&='|'^='|'~=') right=ConditionalExpression)?
 ;
 
-ConditionalExpression:
-    OrOrExpression ({infer ConditionalExpression.condExpr=current} '?' thenExpr=ConditionalExpression ':' elseExpr=ConditionalExpression)?
+ConditionalExpression infers Expression:
+    LogicalExpression ({infer ConditionalExpression.cond=current} '?' then=LogicalExpression ':' altr=LogicalExpression)*
 ;
 
-OrOrExpression:
-    AndAndExpression ({infer InfixExpression.left=current} op='||' right=AndAndExpression)*
+LogicalExpression:
+    BitwiseExpression ({infer InfixExpression.left=current} op=('&&'|'||') right=BitwiseExpression)*
 ;
 
-AndAndExpression:
-    OrExpression ({infer InfixExpression.left=current} op='&&' right=OrExpression)*
-;
-
-OrExpression:
-    XorExpression ({infer InfixExpression.left=current} op='|' right=XorExpression)*
-;
-
-XorExpression:
-    AndExpression ({infer InfixExpression.left=current} op='^' right=AndExpression)*
-;
-
-AndExpression:
-    RelationalExpression ({infer InfixExpression.left=current} op='&' right=RelationalExpression)*
+BitwiseExpression:
+    RelationalExpression ({infer InfixExpression.left=current} op=('&'|'|'|'^') right=RelationalExpression)*
 ;
 
 RelationalExpression:
@@ -112,30 +81,76 @@ RelationalExpression:
 ;
 
 AdditiveExpression:
-    MultiplicativeExpression ({infer InfixExpression.left=current} op=('+'|'-'|'~') right=MultiplicativeExpression)*
+    MultiplicativeExpression ({infer InfixExpression.left=current} op=('+'|'-'|'%'|'~') right=MultiplicativeExpression)*
 ;
 
 MultiplicativeExpression:
-    PrefixExpression ({infer InfixExpression.left=current} op=('*'|'/'|'%') right=PrefixExpression)*
-;
-
-PrefixExpression:
-    ({infer PrefixExpression} op=('!'|'-') expr=PrefixExpression) | PostfixExpression
+    PostfixExpression ({infer InfixExpression.left=current} op=('*'|'/'|'%') right=PostfixExpression)*
 ;
 
 PostfixExpression:
-    PrimaryExpression (
-        ({infer MemberAccess.receiver=current} '.' target=[Named:ID]) |
-        ({infer InfixExpression.left=current} op=('..') right=Expression) |
-        ({infer TypeCastExpression.expr=current} 'as' typeRef=TypeReference) |
-        ({infer IndexingExpression.receiver=current} '[' argument=Expression ']') |
-        ({infer CallExpression.receiver=current} '(' (arguments+=Expression (',' arguments+=Expression)* ','?)? ')') |
-        ({infer IsExpression.expr=current} 'is' typeRef=NamedType)
+    PrimaryExpression
+    (
+        // Member call
+        (
+            {infer MemberCall.previous=current}
+            // Member call with function call
+            (
+                '.' element=[NamedElement:ID] 
+                (
+                    explicitOperationCall?='('
+                        (args+=Expression (',' args+=Expression)* ','?)?
+                    ')'
+                )?
+                // Chained function call
+                |
+                (
+                    explicitOperationCall?='('
+                        (args+=Expression (',' args+=Expression)* ','?)?
+                    ')'
+                )
+            )
+        )
+        // Int Range
+        |
+        (
+            {infer InfixExpression.left=current} op=('..') right=Expression
+        )
+        // Type cast
+        |
+        (
+            {infer TypeCastExpression.expr=current} 'as' type=Type
+        ) 
+        // Indexing
+        |
+        (
+            {infer IndexingExpression.receiver=current} '[' index=Expression ']'
+        )
+        // Instance of
+        |
+        (
+            {infer IsExpression.expr=current} 'is' type=ReferenceType
+        )
     )*
 ;
 
 PrimaryExpression:
-    ParenthesizedExpression | FunctionExpression | ReferenceExpression | LiteralExpression
+    PrefixExpression | ParenthesizedExpression | FunctionExpression | ReferenceExpression | LiteralExpression | FeatureCall
+;
+
+FeatureCall:
+	{infer MemberCall}
+	(element=[NamedElement:ID] | element=[NamedElement:'this'] | element=[NamedElement:'super'])
+    // Optional function call after referencing an element
+    (explicitOperationCall?='('
+	(
+	    args+=Expression (',' args+=Expression)*
+	)?
+	')')?
+;
+
+PrefixExpression:
+    op=('!'|'+'|'-') expr=Expression
 ;
 
 ParenthesizedExpression:
@@ -147,7 +162,11 @@ LiteralExpression:
 ;
 
 FunctionExpression:
-    '(' (parameters+=ValueParameter (',' parameters+=ValueParameter)*)? ','? ')' '->' body=Statement
+    '(' (params+=LambdaParameter (',' params+=LambdaParameter)*)? ','? ')' '->' body=Statement
+;
+
+LambdaParameter:
+    name=ID (':' type=Type)?
 ;
 
 ArrayLiteral:
@@ -155,7 +174,7 @@ ArrayLiteral:
 ;
 
 ReferenceExpression:
-    ref=[Named:ID]
+    value=[NamedElement:ID]
 ;
 
 NumberLiteral:
@@ -182,20 +201,20 @@ NullLiteral:
     value='null'
 ;
 
-TypeReference returns TypeReference:
+Type:
     PrimaryType ('[' ({infer ArrayTypeReference.value=current} ']'))*
 ;
 
-fragment PrimaryType returns TypeReference:
-    FunctionType | NamedType
+fragment PrimaryType:
+    FunctionType | ReferenceType
 ;
 
 FunctionType:
-    '(' (params+=TypeReference (',' params+=TypeReference)*)? ','? ')' '->' returnType=TypeReference
+    '(' (params+=Type (',' params+=Type)*)? ','? ')' '->' returnType=Type
 ;
 
-NamedType:
-    ref=[Named:ID] ('<' typeArgs+=TypeReference (',' typeArgs+=TypeReference)* '>')?
+ReferenceType:
+    value=[NamedElement:ID] ('<' args+=Type (',' args+=Type)* '>')?
 ;
 
 terminal ID: /[_a-zA-Z][\w_]*/;
